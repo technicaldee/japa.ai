@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "japa-ai-agent",
   "version": "1.0.0",
   "private": true,
@@ -18,5 +19,19 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
+=======
+  "name": "japa",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "express": "^5.2.1"
+>>>>>>> bf3404634776fb91949bb8aefdfda945cdaea41c
   }
 }
