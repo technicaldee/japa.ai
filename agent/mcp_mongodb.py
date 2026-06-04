@@ -16,10 +16,9 @@ from bson.objectid import ObjectId
 
 class MongoDBMCPServer:
     def __init__(self, uri: str | None = None, db_name: str = "japa"):
-        self.uri = uri or os.getenv(
-            "MONGO_URI",
-            "mongodb+srv://japaai:5iSBDiV84xv6lh1O@cluster0.vqyul6z.mongodb.net/japa?retryWrites=true&w=majority",
-        )
+        self.uri = uri or os.getenv("MONGO_URI", "")
+        if not self.uri:
+            raise ValueError("MONGO_URI environment variable is required")
         self.db_name = db_name
         self.client: MongoClient | None = None
         self.db: Any | None = None

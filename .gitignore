@@ -5,6 +5,8 @@ dist/
 *.db-journal
 .DS_Store
 agent/google-cloud-sdk/
+agent/google-cloud-cli-darwin-arm.tar.gz
+agent/google-cloud-cli-linux-amd64.tar.gz
 backend/prisma/seed-admin.js
 backend/src/config/mongodb.js
 __pycache__/
