@@ -175,6 +175,8 @@ cd agent
 
 [![JAPA Demo Video](https://img.shields.io/badge/Watch-Demo%20Video-FF0000?logo=youtube)](https://youtu.be/your-video-link)
 
+> **Live demo:** [japa-frontend-11121208510.us-central1.run.app](https://japa-frontend-11121208510.us-central1.run.app)
+
 The demo walkthrough covers:
 1. User signup & profile setup
 2. Autonomous agent matching scholarships
