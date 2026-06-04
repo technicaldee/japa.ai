@@ -1,5 +1,6 @@
 import prisma from "../utils/prisma.js";
 import { generateToken, hashPassword, comparePassword } from "../services/auth.js";
+import { runForUser } from "../services/agentScheduler.js";
 
 export async function signup(req, res, next) {
   try {
@@ -22,7 +23,12 @@ export async function signup(req, res, next) {
     });
 
     const token = generateToken(user.id);
-    res.status(201).json({ token, user: { id: user.id, email: user.email, fullName: user.fullName } });
+
+    runForUser(user.id, user.email, user.fullName).catch((err) => {
+      console.error(`[SIGNUP] Agent run for ${user.id} failed:`, err.message);
+    });
+
+    res.status(201).json({ token, user: { id: user.id, email: user.email, fullName: user.fullName, role: user.role } });
   } catch (err) {
     next(err);
   }
@@ -46,7 +52,7 @@ export async function signin(req, res, next) {
     }
 
     const token = generateToken(user.id);
-    res.json({ token, user: { id: user.id, email: user.email, fullName: user.fullName } });
+    res.json({ token, user: { id: user.id, email: user.email, fullName: user.fullName, role: user.role } });
   } catch (err) {
     next(err);
   }
@@ -55,7 +61,7 @@ export async function signin(req, res, next) {
 export async function getMe(req, res) {
   const user = await prisma.user.findUnique({
     where: { id: req.user.id },
-    select: { id: true, email: true, fullName: true, avatarUrl: true, createdAt: true },
+    select: { id: true, email: true, fullName: true, avatarUrl: true, role: true, createdAt: true },
   });
   res.json(user);
 }

@@ -1,0 +1,12 @@
+.git
+.gitignore
+__pycache__
+*.pyc
+.env
+.env.example
+google-cloud-sdk/
+google-cloud-cli-darwin-arm.tar.gz
+cloudbuild.yaml
+deploy.sh
+.gcloudignore
+.dockerignore

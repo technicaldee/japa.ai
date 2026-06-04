@@ -1,9 +1,11 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import Logo from './Logo'
 
-const navItems = [
+const baseNavItems = [
   { path: '/profile', icon: 'person', label: 'Profile' },
   { path: '/discovery', icon: 'explore', label: 'Discovery' },
+  { path: '/agent', icon: 'smart_toy', label: 'Auto Agent' },
   { path: '/applications', icon: 'assignment', label: 'Applications' },
   { path: '/documents', icon: 'description', label: 'Documents' },
   { path: '/digest', icon: 'auto_stories', label: 'Weekly Digest' },
@@ -11,7 +13,10 @@ const navItems = [
 
 export default function Sidebar() {
   const { pathname } = useLocation()
-  const { user, logout } = useAuth()
+  const { user, logout, isAdmin } = useAuth()
+  const navItems = isAdmin
+    ? [...baseNavItems, { path: '/admin', icon: 'shield', label: 'Admin' }]
+    : baseNavItems
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -23,13 +28,7 @@ export default function Sidebar() {
     <>
       <aside className="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 bg-surface-container py-8 px-4 z-50">
         <div className="flex items-center gap-3 px-4 mb-10">
-          <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-on-primary filled">rocket_launch</span>
-          </div>
-          <div>
-            <h1 className="font-headline-md text-headline-md font-black text-primary leading-tight tracking-tight">Japa AI Agent</h1>
-            <p className="font-caption text-caption text-on-surface-variant">Relocation Expert</p>
-          </div>
+          <Logo className="h-16 w-auto" />
         </div>
 
         <nav className="flex-1 space-y-2">
@@ -65,8 +64,7 @@ export default function Sidebar() {
 
       <header className="md:hidden flex justify-between items-center px-4 w-full h-16 bg-surface shadow-sm fixed top-0 z-50">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary filled">rocket_launch</span>
-          <span className="font-headline-md text-headline-md font-bold text-primary">Japa AI Agent</span>
+          <Logo className="h-7 w-auto" />
         </div>
         <div className="flex items-center gap-4">
           <span className="material-symbols-outlined cursor-pointer text-on-surface-variant">notifications</span>

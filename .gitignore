@@ -4,3 +4,8 @@ dist/
 *.db
 *.db-journal
 .DS_Store
+agent/google-cloud-sdk/
+backend/prisma/seed-admin.js
+backend/src/config/mongodb.js
+__pycache__/
+*.pyc

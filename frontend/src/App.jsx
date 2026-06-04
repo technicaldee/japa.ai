@@ -10,11 +10,23 @@ import ApplicationEngine from './pages/ApplicationEngine'
 import DocumentChecklist from './pages/DocumentChecklist'
 import ScholarshipDetails from './pages/ScholarshipDetails'
 import WeeklyDigest from './pages/WeeklyDigest'
+import AiAgent from './pages/AiAgent'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminAnalytics from './pages/admin/AdminAnalytics'
+import AdminScrapers from './pages/admin/AdminScrapers'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><p className="text-on-surface-variant">Loading...</p></div>
   if (!user) return <Navigate to="/signin" replace />
+  return children
+}
+
+function AdminRoute({ children }) {
+  const { user, loading, isAdmin } = useAuth()
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><p className="text-on-surface-variant">Loading...</p></div>
+  if (!user) return <Navigate to="/signin" replace />
+  if (!isAdmin) return <Navigate to="/discovery" replace />
   return children
 }
 
@@ -39,6 +51,12 @@ export default function App() {
       <Route path="/scholarship/:id" element={<ProtectedRoute><ScholarshipDetails /></ProtectedRoute>} />
       <Route path="/scholarship" element={<ProtectedRoute><ScholarshipDetails /></ProtectedRoute>} />
       <Route path="/digest" element={<ProtectedRoute><WeeklyDigest /></ProtectedRoute>} />
+      <Route path="/agent" element={<ProtectedRoute><AiAgent /></ProtectedRoute>} />
+
+      <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+      <Route path="/admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
+      <Route path="/admin/scrapers" element={<AdminRoute><AdminScrapers /></AdminRoute>} />
+
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

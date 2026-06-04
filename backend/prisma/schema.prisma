@@ -13,12 +13,14 @@ model User {
   password  String
   fullName  String
   avatarUrl String?
+  role      String   @default("user")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   profile      Profile?
   applications Application[]
   documents    Document[]
+  activityLogs ActivityLog[]
 }
 
 model Profile {
@@ -78,4 +80,54 @@ model Document {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model ScraperSource {
+  id          String   @id @default(cuid())
+  name        String
+  url         String
+  type        String   @default("rss")
+  status      String   @default("active")
+  lastRun     DateTime?
+  schedule    String   @default("daily")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  opportunities ScrapedOpportunity[]
+}
+
+model ScrapedOpportunity {
+  id            String   @id @default(cuid())
+  sourceId      String
+  source        ScraperSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  url           String?
+  funding       String?
+  deadline      DateTime?
+  location      String?
+  degreeLevel   String?
+  status        String   @default("pending")
+  submittedBy   String?
+  notes         String?
+  matchedCount  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  resource  String
+  details   String?
+  createdAt DateTime @default(now())
+}
+
+model AnalyticsSnapshot {
+  id        String   @id @default(cuid())
+  label     String
+  data      String
+  createdAt DateTime @default(now())
 }
