@@ -6,6 +6,7 @@ import {
   createApplication,
   updateApplication,
   deleteApplication,
+  generateEssay,
 } from "../controllers/applications.js";
 
 const router = Router();
@@ -15,5 +16,6 @@ router.get("/:id", authenticate, getApplication);
 router.post("/", authenticate, createApplication);
 router.put("/:id", authenticate, updateApplication);
 router.delete("/:id", authenticate, deleteApplication);
+router.post("/:id/generate-essay", authenticate, generateEssay);
 
 export default router;

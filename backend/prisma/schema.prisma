@@ -65,21 +65,27 @@ model Application {
   status        String   @default("draft")
   progress      Int      @default(0)
   deadline      DateTime?
+  requiredDocs  String?  @default("[]")
   essayContent  String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  documents     Document[]
 }
 
 model Document {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type        String
-  status      String   @default("pending")
-  fileUrl     String?
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applicationId String?
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  type          String
+  status        String   @default("pending")
+  source        String   @default("user_upload")
+  fileUrl       String?
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model ScraperSource {

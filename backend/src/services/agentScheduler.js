@@ -38,9 +38,10 @@ export async function runForUser(userId, userEmail, userName) {
       let appStatus = "applied";
       let appProgress = 100;
       let appDetail = "Auto-submitted by JAPA agent";
+      let browserResult = null;
 
       if (match.url) {
-        const browserResult = await attemptAutomatedApplication(
+        browserResult = await attemptAutomatedApplication(
           match.url,
           userId
         );
@@ -81,12 +82,18 @@ export async function runForUser(userId, userEmail, userName) {
             scholarshipId: prismaScholarship.id,
             status: appStatus,
             progress: appProgress,
+            requiredDocs: browserResult.missingDocs?.length
+              ? JSON.stringify(browserResult.missingDocs) : undefined,
           },
         });
       } else {
+        const updateData = { status: appStatus, progress: appProgress };
+        if (browserResult?.missingDocs?.length && !existingApp.requiredDocs) {
+          updateData.requiredDocs = JSON.stringify(browserResult.missingDocs);
+        }
         await prisma.application.update({
           where: { id: existingApp.id },
-          data: { status: appStatus, progress: appProgress },
+          data: updateData,
         });
       }
 

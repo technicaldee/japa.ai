@@ -1,36 +1,57 @@
 import { useState, useEffect } from 'react'
 import Sidebar from '../components/Sidebar'
 import { applicationApi } from '../api/applications'
-import { scholarshipApi } from '../api/scholarships'
+
+const docIcons = {
+  transcript: 'school',
+  essay: 'edit_note',
+  reference_letter: 'contact_mail',
+  passport: 'badge',
+  ielts: 'language',
+  cv: 'description',
+  statement_of_purpose: 'edit_note',
+  recommendation: 'contact_mail',
+  financial_statement: 'account_balance',
+}
+
+const docLabels = {
+  transcript: 'Academic Transcripts',
+  essay: 'Personal Statement / Essay',
+  reference_letter: 'Reference Letters',
+  passport: 'Passport Copy',
+  ielts: 'English Proficiency (IELTS/TOEFL)',
+  cv: 'Curriculum Vitae',
+  statement_of_purpose: 'Statement of Purpose',
+  recommendation: 'Recommendation Letter',
+  financial_statement: 'Financial Statement',
+}
+
+const docCategories = {
+  ai_generated: { label: 'AI-Generated', icon: 'magic', color: 'text-purple-600 bg-purple-50' },
+  user_upload: { label: 'You Upload', icon: 'upload_file', color: 'text-amber-600 bg-amber-50' },
+  template: { label: 'Template Ready', icon: 'description', color: 'text-blue-600 bg-blue-50' },
+}
+
+function getDocCategory(type) {
+  const aiTypes = ['essay', 'statement_of_purpose']
+  const templateTypes = ['recommendation', 'reference_letter']
+  if (aiTypes.includes(type)) return 'ai_generated'
+  if (templateTypes.includes(type)) return 'template'
+  return 'user_upload'
+}
 
 export default function ApplicationEngine() {
   const [applications, setApplications] = useState([])
-  const [scholarships, setScholarships] = useState([])
   const [loading, setLoading] = useState(true)
-  const [showNew, setShowNew] = useState(false)
-  const [selectedScholarship, setSelectedScholarship] = useState('')
-  const [appDeadline, setAppDeadline] = useState('')
+  const [generating, setGenerating] = useState(null)
+  const [expandedEssay, setExpandedEssay] = useState(null)
 
   useEffect(() => {
-    Promise.all([applicationApi.list(), scholarshipApi.list()])
-      .then(([apps, schols]) => { setApplications(apps); setScholarships(schols) })
+    applicationApi.list()
+      .then(setApplications)
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
-
-  const createApp = async () => {
-    if (!selectedScholarship) return
-    try {
-      const app = await applicationApi.create({
-        scholarshipId: selectedScholarship,
-        deadline: appDeadline || null,
-      })
-      setApplications(p => [app, ...p])
-      setShowNew(false)
-      setSelectedScholarship('')
-      setAppDeadline('')
-    } catch {}
-  }
 
   const updateApp = async (id, data) => {
     try {
@@ -39,116 +60,211 @@ export default function ApplicationEngine() {
     } catch {}
   }
 
-  const deleteApp = async (id) => {
+  const handleGenerateEssay = async (appId) => {
+    setGenerating(appId)
     try {
-      await applicationApi.delete(id)
-      setApplications(p => p.filter(a => a.id !== id))
+      const res = await applicationApi.generateEssay(appId)
+      setApplications(p => p.map(a =>
+        a.id === appId ? { ...a, essayContent: res.essay } : a
+      ))
     } catch {}
+    setGenerating(null)
+  }
+
+  const parsedDocs = (app) => {
+    try {
+      const docs = typeof app.requiredDocs === 'string' ? JSON.parse(app.requiredDocs) : (app.requiredDocs || [])
+      return Array.isArray(docs) ? docs : []
+    } catch {
+      return []
+    }
   }
 
   return (
     <div className="bg-background text-on-background font-body-md min-h-screen flex">
       <Sidebar/>
-      <main className="flex-1 md:ml-64 pt-16 md:pt-0 pb-20 md:pb-0 p-margin-mobile md:p-margin-desktop">
+      <main className="flex-1 md:ml-64 pt-16 md:pt-0 pb-20 md:pb-0 px-margin-mobile md:px-margin-desktop py-lg">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-4">
-            <div>
-              <h2 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-2">Auto-Application Engine</h2>
-              <p className="font-body-md text-body-md text-on-surface-variant max-w-2xl">Your centralized hub for tracking and submitting university applications.</p>
-            </div>
-            <button className="bg-primary-container text-on-primary py-3 px-6 rounded-lg font-label-md text-label-md flex items-center gap-2 hover:bg-inverse-surface transition-colors shrink-0" onClick={() => setShowNew(true)}>
-              <span className="material-symbols-outlined">add_circle</span>
-              New Application
-            </button>
+          <div className="mb-10">
+            <h2 className="font-headline-lg text-headline-lg text-primary mb-2">Auto-Application Engine</h2>
+            <p className="font-body-md text-body-md text-on-surface-variant max-w-2xl">
+              The agent discovers requirements, drafts your essay, and tracks what's left for you to submit.
+            </p>
           </div>
-
-          {showNew && (
-            <div className="bg-surface-container-lowest rounded-xl p-md card-shadow mb-lg border border-secondary">
-              <h3 className="font-headline-md text-headline-md text-primary mb-md">Start New Application</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-md mb-md">
-                <select className="px-sm py-sm border border-outline-variant rounded-lg bg-surface-container-lowest text-body-md" value={selectedScholarship} onChange={e => setSelectedScholarship(e.target.value)}>
-                  <option value="">Select scholarship...</option>
-                  {scholarships.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
-                </select>
-                <input className="px-sm py-sm border border-outline-variant rounded-lg bg-surface-container-lowest text-body-md" type="date" value={appDeadline} onChange={e => setAppDeadline(e.target.value)} placeholder="Deadline (optional)"/>
-              </div>
-              <div className="flex gap-sm">
-                <button className="bg-primary-container text-on-primary px-4 py-2 rounded-lg font-label-md" onClick={createApp}>Create</button>
-                <button className="border border-outline-variant px-4 py-2 rounded-lg font-label-md" onClick={() => setShowNew(false)}>Cancel</button>
-              </div>
-            </div>
-          )}
 
           {loading ? (
             <p className="text-on-surface-variant">Loading applications...</p>
           ) : applications.length === 0 ? (
-            <p className="text-on-surface-variant">No applications yet. Start one above!</p>
+            <div className="bg-surface-container-lowest rounded-xl p-8 border border-dashed border-outline-variant text-center">
+              <span className="material-symbols-outlined text-4xl text-on-surface-variant mb-2">description</span>
+              <p className="text-on-surface-variant">No applications yet. Run the agent from the Auto Agent page to start.</p>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
-              <div className="lg:col-span-8 space-y-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-headline-md text-headline-md text-primary">Active Submissions</h3>
-                  <span className="bg-surface-container-high text-on-surface px-3 py-1 rounded-full font-caption text-caption font-semibold">{applications.filter(a=>a.status!=='submitted').length} In Progress</span>
-                </div>
+            <div className="space-y-6">
+              {applications.map(app => {
+                const docs = parsedDocs(app)
+                const hasEssay = app.essayContent && app.essayContent.length > 0
+                const allGenerated = docs.filter(d => getDocCategory(d) === 'ai_generated').every(d =>
+                  d === 'essay' ? hasEssay : false
+                )
+                const docsComplete = docs.length === 0 || allGenerated || app.status === 'submitted'
+                const currentProgress = app.status === 'submitted' ? 100 : docsComplete ? 80 : app.progress
 
-                {applications.map(app => (
-                  <div key={app.id} className={`bg-surface-container-lowest rounded-xl p-6 card-shadow relative overflow-hidden group ${app.progress >= 90 ? 'border-l-4 border-secondary' : 'border border-outline-variant/30'}`}>
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform"/>
-                    <div className="flex justify-between items-start mb-6">
-                      <div>
-                        <h4 className="font-headline-md text-headline-md text-primary mb-1">{app.scholarship?.title || 'Unknown Scholarship'}</h4>
-                        <p className="font-body-md text-body-md text-on-surface-variant flex items-center gap-2">
-                          <span className="material-symbols-outlined text-sm">school</span>
-                          {app.scholarship?.degreeLevel || 'Program'}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-label-md text-label-md text-error mb-1">{app.deadline ? `Due ${new Date(app.deadline).toLocaleDateString()}` : 'No deadline'}</div>
-                      </div>
-                    </div>
-                    <div className="mb-6">
-                      <div className="flex justify-between font-caption text-caption mb-2">
-                        <span className={`font-semibold ${app.status === 'submitted' ? 'text-secondary' : 'text-primary'}`}>
-                          {app.status === 'draft' ? 'Draft' : app.status === 'submitted' ? 'Submitted' : 'In Progress'}
-                        </span>
-                        <span className="text-on-surface-variant">{app.progress}% Complete</span>
-                      </div>
-                      <div className="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full ${app.progress >= 90 ? 'bg-secondary' : 'bg-primary-container'}`} style={{width:`${app.progress}%`}}/>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <button className="border border-primary text-primary px-4 py-2 rounded-lg font-label-md text-label-md hover:bg-surface-container-high transition-colors" onClick={() => updateApp(app.id, { status: 'submitted', progress: 100 })}>Mark Submitted</button>
-                      <button className="text-error font-label-md text-label-md px-4 py-2" onClick={() => deleteApp(app.id)}>Delete</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="lg:col-span-4 space-y-6">
-                <div className="bg-gradient-to-br from-surface-container to-surface-container-highest rounded-xl p-6 card-shadow border border-white/50 relative">
-                  <div className="absolute top-4 right-4 text-secondary/20">
-                    <span className="material-symbols-outlined text-4xl filled">smart_toy</span>
-                  </div>
-                  <h3 className="font-headline-md text-headline-md text-primary mb-2 relative z-10">Agent Suggestions</h3>
-                  <p className="font-body-md text-body-md text-on-surface-variant mb-6 relative z-10">Track your application progress and deadlines.</p>
-                  <div className="space-y-4 relative z-10">
-                    {applications.filter(a => a.progress < 100).length > 0 ? (
-                      applications.filter(a => a.progress < 100).slice(0, 2).map(app => (
-                        <div key={app.id} className="bg-surface-container-lowest p-4 rounded-lg card-shadow border border-outline-variant/20 flex gap-3">
-                          <span className="material-symbols-outlined text-secondary shrink-0">schedule</span>
-                          <div>
-                            <p className="font-label-md text-label-md text-on-surface mb-1">{app.scholarship?.title} — {app.progress}% done</p>
-                            <p className="font-caption text-caption text-on-surface-variant">Keep going! You're making progress.</p>
-                          </div>
+                return (
+                  <div key={app.id} className={`bg-surface-container-lowest rounded-xl card-shadow overflow-hidden ${
+                    app.status === 'submitted' ? 'border-l-4 border-secondary' : 'border border-outline-variant/30'
+                  }`}>
+                    {/* Header */}
+                    <div className="p-6 pb-4 flex flex-col md:flex-row justify-between items-start gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-headline-md text-headline-md text-primary">
+                            {app.scholarship?.title || 'Scholarship'}
+                          </h3>
+                          {app.status === 'submitted' && (
+                            <span className="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full font-semibold flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                              Submitted
+                            </span>
+                          )}
                         </div>
-                      ))
-                    ) : (
-                      <p className="text-on-surface-variant">No pending actions. Great job!</p>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-on-surface-variant">
+                          <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px]">school</span>
+                            {app.scholarship?.provider || 'N/A'}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px]">payments</span>
+                            {app.scholarship?.funding || 'N/A'}
+                          </span>
+                          {app.deadline && (
+                            <span className="flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[14px]">calendar_today</span>
+                              Due {new Date(app.deadline).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0 w-full md:w-32">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs text-on-surface-variant">Progress</span>
+                          <span className="text-xs font-semibold text-primary">{currentProgress}%</span>
+                        </div>
+                        <div className="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full transition-all ${
+                            currentProgress >= 100 ? 'bg-secondary' : 'bg-primary-container'
+                          }`} style={{ width: `${currentProgress}%` }} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Required Documents Section */}
+                    <div className="px-6 pb-4">
+                      <h4 className="font-label-md text-label-md text-on-surface mb-3 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[18px]">checklist</span>
+                        Required Documents
+                      </h4>
+                      {docs.length === 0 ? (
+                        <p className="text-sm text-on-surface-variant italic">
+                          No requirements extracted yet. Run the agent to analyze this scholarship.
+                        </p>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {docs.map((doc, i) => {
+                            const category = getDocCategory(doc)
+                            const cfg = docCategories[category]
+                            const isEssay = doc === 'essay'
+                            const isDone = isEssay ? hasEssay : false
+
+                            return (
+                              <div key={i} className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${
+                                isDone ? 'bg-green-50 border-green-200' : 'bg-surface-container border-outline-variant/50'
+                              }`}>
+                                <span className={`material-symbols-outlined text-[20px] ${
+                                  isDone ? 'text-green-600' : 'text-on-surface-variant'
+                                }`}>
+                                  {isDone ? 'check_circle' : (docIcons[doc] || 'description')}
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                  <p className={`text-sm font-medium truncate ${isDone ? 'text-green-700' : 'text-on-surface'}`}>
+                                    {docLabels[doc] || doc}
+                                  </p>
+                                  <span className={`text-xs px-2 py-0.5 rounded-full inline-block mt-0.5 ${cfg.color}`}>
+                                    {cfg.label}
+                                  </span>
+                                  {isEssay && !isDone && (
+                                    <button
+                                      onClick={() => handleGenerateEssay(app.id)}
+                                      disabled={generating === app.id}
+                                      className="text-xs text-secondary font-semibold hover:underline ml-2"
+                                    >
+                                      {generating === app.id ? 'Generating...' : 'Generate'}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Generated Essay */}
+                    {hasEssay && (
+                      <div className="px-6 pb-4">
+                        <button
+                          onClick={() => setExpandedEssay(expandedEssay === app.id ? null : app.id)}
+                          className="flex items-center gap-2 text-sm font-semibold text-secondary hover:underline"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">
+                            {expandedEssay === app.id ? 'expand_less' : 'expand_more'}
+                          </span>
+                          Personal Statement ({app.essayContent.length} chars)
+                        </button>
+                        {expandedEssay === app.id && (
+                          <div className="mt-3 p-4 bg-surface rounded-lg border border-outline-variant/30 text-sm text-on-surface whitespace-pre-wrap leading-relaxed max-h-96 overflow-y-auto">
+                            {app.essayContent}
+                          </div>
+                        )}
+                      </div>
                     )}
+
+                    {/* Actions */}
+                    <div className="px-6 py-4 bg-surface-container/50 border-t border-outline-variant/20 flex flex-wrap gap-3 items-center">
+                      {app.status !== 'submitted' && (
+                        <button
+                          onClick={() => updateApp(app.id, { status: 'submitted', progress: 100 })}
+                          className="bg-secondary text-on-secondary px-5 py-2 rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-2"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">check</span>
+                          Mark Submitted
+                        </button>
+                      )}
+                      {!hasEssay && docs.some(d => d === 'essay' || d === 'statement_of_purpose') && (
+                        <button
+                          onClick={() => handleGenerateEssay(app.id)}
+                          disabled={generating === app.id}
+                          className="border border-secondary text-secondary px-5 py-2 rounded-lg font-label-md text-label-md hover:bg-surface-container-high transition-colors flex items-center gap-2"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">
+                            {generating === app.id ? 'sync' : 'auto_awesome'}
+                          </span>
+                          {generating === app.id ? 'Generating...' : 'Generate Essay'}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => updateApp(app.id, app.status === 'submitted'
+                          ? { status: 'draft', progress: 50 }
+                          : { status: 'submitted', progress: 100 }
+                        )}
+                        className="text-on-surface-variant text-sm px-4 py-2 hover:text-primary transition-colors"
+                      >
+                        {app.status === 'submitted' ? 'Undo Submission' : 'Skip'}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </div>
+                )
+              })}
             </div>
           )}
         </div>
