@@ -173,9 +173,7 @@ cd agent
 
 ## 📹 Demo & Walkthrough
 
-[![JAPA Demo Video](https://img.shields.io/badge/Watch-Demo%20Video-FF0000?logo=youtube)](https://youtu.be/your-video-link)
-
-> **Live demo:** [japa-frontend-11121208510.us-central1.run.app](https://japa-frontend-11121208510.us-central1.run.app)
+[![JAPA Demo Video](https://img.shields.io/badge/Watch-Demo%20Video-FF0000?logo=youtube)](https://youtu.be/ubbGKVwrVW0)
 
 The demo walkthrough covers:
 1. User signup & profile setup
@@ -183,6 +181,14 @@ The demo walkthrough covers:
 3. Agent visiting + analyzing external scholarship websites
 4. Application tracking dashboard
 5. Email report delivery
+
+### Deployed Services
+
+| Service | URL |
+|---|---|
+| **Frontend** | [japa-frontend-11121208510.us-central1.run.app](https://japa-frontend-11121208510.us-central1.run.app) |
+| **Backend** | [japa-backend-11121208510.us-central1.run.app](https://japa-backend-11121208510.us-central1.run.app) |
+| **ADK Agent** | [japa-agent-11121208510.us-central1.run.app](https://japa-agent-11121208510.us-central1.run.app) |
 
 ---
 
@@ -257,6 +263,8 @@ When the agent encounters a scholarship URL, it:
 
 - **Edidiong Udoh** — Lead Developer, ADK Agent, Backend, Architecture
 - **Boluwatife Adegoke** — Frontend Design System, UI/UX Components
+- **Mildred Nwonye** — Backend Developer
+- **Phillip Nwonye** — DevOps
 
 ---
 
